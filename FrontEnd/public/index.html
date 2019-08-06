@@ -1,54 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <link rel="icon" href="<%= BASE_URL %>favicon.ico"> <!-- change icon here -->
-    <script src="https://kit.fontawesome.com/26ea5d709d.js"></script>
-    <link href='https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons' rel="stylesheet">
 
-    <!-- Leaflet Stylesheet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link rel="icon" href="<%= BASE_URL %>favicon.ico"> <!-- change icon here -->
+  <script src="https://kit.fontawesome.com/26ea5d709d.js"></script>
+  <link href='https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons' rel="stylesheet">
+
+  <!-- Leaflet Stylesheet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css"
     integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-    crossorigin=""/>
-    <!-- Leaflet API -->
-    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
+    crossorigin="" />
+  <!-- Leaflet API -->
+  <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
     integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
     crossorigin=""></script>
 
-    <!-- Leaflet Geocoder Control -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+  <!-- Leaflet Geocoder Control -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-    <!-- Script for measurement tool-->
-    <link rel="stylesheet" href="../src/leaflet/leaflet.measure.css" />
+  <!-- Script for measurement tool-->
+  <link rel="stylesheet" href="../src/leaflet/leaflet.measure.css" />
 
-    <!-- Leaflet Routing Machine API -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+  <!-- Leaflet Routing Machine API -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
-    <title>mpr</title>
-  </head>
-  <body>
-    <noscript>
-      <strong>We're sorry but mpr doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
-    </noscript>
-    <div id="app"></div>
-    <!-- built files will be auto injected -->
-  </body>
+  <!-- Leaflet Easy Button -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+
+  <title>mpr</title>
+</head>
+
+<body>
+  <noscript>
+    <strong>We're sorry but mpr doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+  </noscript>
+  <div id="app"></div>
+  <!-- built files will be auto injected -->
+</body>
+
 </html>
 
 <style>
-  *{
-      margin:0;
-    }
-html, body {
-  top:0;
-  bottom:0;
-  left:0;
-  right:0;
-  height: 100%;
-  width: 100%;
-}
+  * {
+    margin: 0;
+  }
 
-</style> 
+  html,
+  body {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    width: 100%;
+  }
+</style>

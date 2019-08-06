@@ -1,8 +1,12 @@
 <template>
   <v-app id="app">
+   
     <toolbar />
     <!-- <searchbar/> -->
-    <leaflet/>
+    <v-content>
+      <leaflet/>
+    </v-content>
+
   </v-app>
 </template>
 
