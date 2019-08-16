@@ -1,11 +1,15 @@
-# mpr
+# MyPersonalizedRoute
 
+##Development
+```
+For documentation of the application, see MPR_Documentation.pdf
+```
 ## Project setup
 ```
 npm install
 ```
 
-### Compiles and hot-reloads for development
+### Compiles and hosts website for development
 ```
 npm run serve
 ```
