@@ -2,13 +2,12 @@ import Vue from 'vue'
 import Vuetify from 'vuetify'
 import axios from 'axios'
 import App from './App.vue'
-import responsive from 'vue-responsive'
 import '../node_modules/vuetify/dist/vuetify.min.css'
 
 
 
 Vue.config.productionTip = false
-Vue.use(responsive, axios)
+Vue.use(axios)
 Vue.use(Vuetify)
 
 //creates a constant variable eventBus

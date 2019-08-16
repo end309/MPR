@@ -156,9 +156,9 @@
                   ></v-time-picker>
                 </v-menu>
                 <v-radio-group class="mx-3" v-model="option">
-                  <v-radio label="Shortest Distance" value="0" key="1" class="black--text"></v-radio>
-                  <v-radio label="Shortest Time" value="1" key="2"></v-radio>
-                  <v-radio label="Most Popular" value="2" key="3"></v-radio>
+                  <v-radio label="Fastest Route" value="0" key="1" class="black--text"></v-radio>
+                  <v-radio label="Shortest Route" value="1" key="2"></v-radio>
+                  <v-radio label="Most Popular Route" value="2" key="3"></v-radio>
                   <v-radio label="Personalized Route" value="3" key="4"></v-radio>
                 </v-radio-group>
                 <div class="text-xs-center">
@@ -207,6 +207,7 @@
                   @change="
                     if(temporal)
                       spatial = false;
+
                       showSpatial();
                   "
                 ></v-switch> 
@@ -345,6 +346,7 @@ export default {
         this.dest_latlng = result.coord;
         this.dest = result.name;
       } else if (result.choice == 5) {
+        // orig validation
         this.origin_latlng = result.coord;
         this.origin = result.name;
       }
@@ -379,13 +381,10 @@ export default {
     },
     //when click GO! button to find route
     findRoute() {
-      var filled = true;
-      if (this.origin == null || this.dest == null || this.time == null) {
-        filled = false;
-      }
-      if (!filled) {
+     
+      if (this.origin == null || this.dest == null || this.time == null) { //if a field is missing 
         alert("Cannot find route! One or more fields are missing");
-      } else if (filled) {
+      } else {
         //validates the coordinates of the origin and destination before routing
         if (this.dest_latlng.length == 0) {
           eventBus.$emit("search-submit", { query: this.dest, choice: 3 });
@@ -403,7 +402,13 @@ export default {
     },
     //Function to display the spatial coverage from all users
     showSpatial() {
-      eventBus.$emit("show-spatial", this.spatial);
+      eventBus.$emit("show-spatial", {spatial: this.spatial, temporal: this.temporal});
+    },
+    //Clear route
+    clearRoute() {
+      this.dest = "";
+      this.origin = "";
+      eventBus.$emit("clear-route");
     }
   }
 };
