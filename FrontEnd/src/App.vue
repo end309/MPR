@@ -11,18 +11,14 @@
 </template>
 
 <script>
-import banner from './components/banner.vue'
 import leaflet from './components/leaflet.vue'
-import searchbar from './components/searchbar.vue'
 import toolbar from './components/toolbar.vue'
 
 export default {
   name: 'app',
   components: {
-    banner,
-    searchbar,
     leaflet,
-    toolbar,
+    toolbar
   }
 }
 </script>

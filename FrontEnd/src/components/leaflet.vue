@@ -1,12 +1,25 @@
 <template>
   <div style="height:100%" id="map-container">
-    <!-- Button does show up, but need to change z-index of things-->
-    <div style="z-index:2;"> <v-btn>alarm</v-btn> </div>
+    <v-card
+      class="leaflet-bottom px-5 pt-2 rounded-card"
+      id="timeslider"
+      max-width="75%"
+      v-if="show"
+      @mouseover="hover = true; mymap.dragging.disable(); mymap.doubleClickZoom.disable(); "
+      @mouseleave="hover = false; mymap.dragging.enable(); mymap.doubleClickZoom.enable(); "
+    >
+      <v-card-actions class="justify-center">
+        <div style="width:150px;" class="mr-5">
+          <v-text-field  label="Time" readonly outline v-model="time"></v-text-field>
+        </div>
+        <v-slider class = "mt-0" step="5" tick-size="4" v-model="slider"></v-slider>
+      </v-card-actions>
+    </v-card>
   </div>
 </template>
 
 <script>
-import measure from "../leaflet/leaflet.measure.js";
+import leaf from "leaflet";
 import {
   blueIcon,
   redIcon,
@@ -17,12 +30,18 @@ import {
   greyIcon,
   blackIcon
 } from "../leaflet/leaflet-color-markers.js";
-
+import geocoders from "leaflet-control-geocoder";
 import lrm from "../leaflet/leaflet-routing-machine.js";
+//graphhopper api key is: c356ba44-cb48-4e6c-9966-21eeeb72a36b
+//keep an eye on credit usage
+import graphhopper from "lrm-graphhopper"; //not currently being used but I kept it just in case 
+import measure from "../leaflet/leaflet.measure.js";
 import { eventBus } from "../main.js";
 import easyButton from "leaflet-easybutton";
-import proj4 from "proj4";
+import proj4 from "proj4"; //used to convert UTM c
 import heatmap from "leaflet.heat";
+//only 2,500 credits daily - will get error 403 if limit exceeded
+var tom = require("../leaflet/L.Routing.TomTom.js");
 
 //custom leaflet popups test
 // create popup contents
@@ -37,36 +56,34 @@ var customOptions = {
 
 export default {
   name: "leaflet",
-  props: {
-    userId: null,
-    routeQuery: {
-      origin: null,
-      destination: null,
-      time: null
-    }
-  },
+
   data() {
     return {
       mymap: null, //Interactive map
-      OMStile: null,
       //searchMark, origin, destination markers
-      searchMark: {},
-      origin: {},
-      destination: {},
-      user: {},
+      searchMark: {}, //marker for search results
+      origin: {}, //marker for users starting point
+      destination: {}, //marker for users destination
+      user: {}, //users current location
       pRoute: [], //personalized route
-      measureTool: null,
-      geocoder: null,
+      measureTool: null, //leaflet measuring tool
+      geocoder: null, //leaflet geocoder - Nominatim
       router: null, //leaflet routing machine
-      heatData: [],
-      heatLayer: null
+      heatData: [], //Data used in the heatmap
+      heatLayer: null, //The heatmap visualized on the map
+      timeData: [], //temporal data - not finalized
+      timeLayer: null, //series of heatmaps seperated for a time range
+      slider: 0, // value of the slider for temporal coverage
+      time: "00:00",
+      show: false, //display or hide time slider
+      hover: false //check if hovering on time slider
     };
   },
   mounted() {
     //initialize map
     this.initMap();
     this.locateUser();
-    //this.trajectories(); //temporary trajectories
+    //this.trajectories(); 
     //this.rtest();
 
     //event handler to geocode an address to return lat and long for map
@@ -171,8 +188,17 @@ export default {
     //NOT COMPLETE
     eventBus.$on("find-route", query => {
       let _this = this;
-      //shortest distance and shortest time - option 2 is temporary
+      //Option 0 for Fastest Route
       if (query.option == 0) {
+        this.router._router.options.routeType = "fastest";
+        //If existing route on map, remove
+        var check = this.router.getPlan().getWaypoints();
+        if (check[0].latLng != null || check[1].latLng != null) {
+          this.router.getPlan().setWaypoints([]);
+          this.mymap.removeLayer(this.origin);
+          this.mymap.removeLayer(this.destination);
+        }
+
         var waypoints = [
           new L.Routing.Waypoint(L.latLng(query.orig[0], query.orig[1]), "A"),
           new L.Routing.Waypoint(L.latLng(query.dest[0], query.dest[1]), "B")
@@ -181,109 +207,32 @@ export default {
         this.router.route();
         this.router.addTo(this.mymap);
       } else if (query.option == 1) {
-        //testRoute_shen2 -- need to convert to lat and long first
-        this.$http
-          .get("http://35.238.228.84:3050/trajectory", {
-            params: {
-              src: 64648,
-              dest: 62934
-            }
-          })
-          .then(function(response) {
-            //note: utm zone hardcoded for shenzhen city
-            var utm = "+proj=utm +zone=49";
-            var wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
+        //Option 1 for shortest Route
+        this.router._router.options.routeType = "shortest";
+        //If existing route on map, remove
+        var check = this.router.getPlan().getWaypoints();
 
-            var tmp;
-            var latlngs = [];
-            console.log("response = ", response);
-            var utmcoords = response.data.data;
-            //proj4 input [projection of source, desired projection, easting, northing]
-            //proj4 output [long, lat]
-            var tmp = [];
-            for (var i = 0; i < utmcoords.length; i++) {
-              tmp = proj4(utm, wgs84, [utmcoords[i][1], utmcoords[i][0]]);
-              latlngs.push([tmp[1], tmp[0]]);
-            }
+        if (check[0].latLng != null || check[1].latLng != null) {
+          this.router.getPlan().setWaypoints([]);
+          this.mymap.removeLayer(this.origin);
+          this.mymap.removeLayer(this.destination);
+        }
 
-            // // does not give me the proper sequence of vertices??
-            // var polyline = L.polyline(latlngs, { color: "red" }).addTo(
-            //   _this.mymap
-            // );
-            // _this.mymap.fitBounds(polyline.getBounds());
-
-            //points
-            for (var i = 0; i < latlngs.length; i++) {
-              L.marker([latlngs[i][0], latlngs[i][1]]).addTo(_this.mymap);
-            }
-
-            var url = "https://api.mapbox.com/matching/v5/mapbox/driving/";
-            var tmp2 = "";
-            for (var i = 0; i < latlngs.length; i++) {
-              if (i == latlngs.length - 1) {
-                tmp2 = tmp2.concat(
-                  latlngs[i][1].toString(),
-                  ",",
-                  latlngs[i][0].toString()
-                );
-              } else {
-                tmp2 = tmp2.concat(
-                  latlngs[i][1].toString(),
-                  ",",
-                  latlngs[i][0].toString(),
-                  ";"
-                );
-              }
-            }
-
-            url = url.concat(
-              tmp2,
-              "?geometries=geojson&access_token=pk.eyJ1IjoiYWEtdmFyaXl1biIsImEiOiJjanZzYmhja2QxM2l5NGFvOHpqdXhiNDJvIn0.ez9bRvvx0eg9RZVmjiTPpQ"
-            );
-            _this.$http
-              .get(url)
-              .then(function(route) {
-                console.log("Lat and Long: ", latlngs);
-                console.log("MAP MATCHING ---: ", route);
-                var match = route.data.matchings;
-                if (match.length != 0) {
-                  for (var i = 0; i < match.length; i++) {
-                    var coords = match[i].geometry.coordinates;
-                    var tmp = [];
-                    for (var j = 0; j < coords.length; j++) {
-                      tmp.push([coords[j][1], coords[j][0]]);
-                    }
-                    var polyline = L.polyline(tmp, { color: "red" }).addTo(
-                      _this.mymap
-                    );
-                    _this.mymap.fitBounds(polyline.getBounds());
-                  }
-
-                  // console.log('UTM: ', utm.convertUtmToLatLng())
-                } else {
-                  alert("Route could not be matched!");
-                }
-              })
-              .catch(function(error) {
-                console.log(error);
-              });
-          });
+        var waypoints = [
+          new L.Routing.Waypoint(L.latLng(query.orig[0], query.orig[1]), "A"),
+          new L.Routing.Waypoint(L.latLng(query.dest[0], query.dest[1]), "B")
+        ];
+        this.router.setWaypoints(waypoints);
+        this.router.route();
+        this.router.addTo(this.mymap);
       } else if (query.option == 2) {
         //testRoute_shen2 - mapbox map matching
         this.$http
-          .get("http://demo5390470.mockable.io/shen")
+          .get("http://demo5390470.mockable.io/matchTest")
           .then(function(response) {
-            var tmp;
-            var latlngs = response.data;
-
-            //  for (var i = 0; i < response.data.ID.length; i++) {
-            //      tmp = L.latLng(response.data.begin.lat[i], response.data.begin.lng[i])
-            //      latlngs.push(tmp)
-            //      tmp = L.latLng(response.data.end.lat[i], response.data.end.lng[i])
-            //      latlngs.push(tmp)
-            // }
-
-            //console.log(latlngs)
+            var latlngs = response.data.data;
+            //console.log("SKRRT___: ", latlngs)
+  
             // var polyline = L.polyline(latlngs, {color: 'red'}).addTo(_this.mymap);
             // _this.mymap.fitBounds(polyline.getBounds());
 
@@ -295,64 +244,63 @@ export default {
                            createMarker: function () {}
                        }).addTo(_this.mymap); */
 
-            //Mapbox map matching api - give lng,lat;,lng,lat;....
+            //OSRM map matching, coordinates must be in long-lat, but visualization on map needs lat-long
 
-            var url = "https://api.mapbox.com/matching/v5/mapbox/driving/";
-            var tmp2 = "";
-            for (var i = 0; i < latlngs.ID.length; i++) {
-              if (i == latlngs.ID.length - 1) {
+            var url = "http://router.project-osrm.org/match/v1/driving/";
+            var tmp =""; //radius
+            var tmp2 = ""; // url
+            for (var i = 0; i < latlngs.length; i++) {
+              if (i == latlngs.length - 1) {
                 tmp2 = tmp2.concat(
-                  // latlngs.begin.lng[i].toString(),
-                  // ",",
-                  // latlngs.begin.lat[i].toString(),
-                  // ";",
-                  latlngs.end.lng[i].toString(),
+                  latlngs[i][0].toString(),
                   ",",
-                  latlngs.end.lat[i].toString()
+                  latlngs[i][1].toString()
                 );
+                tmp = tmp.concat("50"); //search radius of 50m 
               } else {
                 tmp2 = tmp2.concat(
                   // latlngs.begin.lng[i].toString(),
                   // ",",
                   // latlngs.begin.lat[i].toString(),
                   // ";",
-                  latlngs.end.lng[i].toString(),
+                  latlngs[i][0].toString(),
                   ",",
-                  latlngs.end.lat[i].toString(),
+                  latlngs[i][1].toString(),
                   ";"
                 );
+                tmp = tmp.concat("49;");
               }
             }
 
             url = url.concat(
               tmp2,
-              "?geometries=geojson&access_token=pk.eyJ1IjoiYWEtdmFyaXl1biIsImEiOiJjanZzYmhja2QxM2l5NGFvOHpqdXhiNDJvIn0.ez9bRvvx0eg9RZVmjiTPpQ"
+              "?overview=full&geometries=geojson&radiuses=",
+              tmp
             );
             _this.$http
               .get(url)
               .then(function(route) {
-                console.log("Lat and Long: ", latlngs);
+                //console.log("Lat and Long: ", latlngs);
                 console.log("MAP MATCHING ---: ", route);
-                var match = route.data.matchings;
-                if (match.length != 0) {
-                  for (var i = 0; i < match.length; i++) {
-                    var coords = match[i].geometry.coordinates;
-                    var tmp = [];
-                    for (var j = 0; j < coords.length; j++) {
-                      tmp.push([coords[j][1], coords[j][0]]);
-                    }
-                    var polyline = L.polyline(tmp, { color: "red" }).addTo(
+                
+                if (route.data.matchings.length != 0) {
+                  var matched = [];
+                  for(var i = 0; i < route.data.matchings[0].geometry.coordinates.length; i++) {
+                    matched.push([route.data.matchings[0].geometry.coordinates[i][1], route.data.matchings[0].geometry.coordinates[i][0] ])
+                  }
+                    var polyline = L.polyline(matched, { color: "red" }).addTo(
                       _this.mymap
                     );
                     _this.mymap.fitBounds(polyline.getBounds());
-                  }
+                  
 
-                  for (var i = 0; i < latlngs.ID.length; i++) {
+                  for (var i = 0; i < latlngs.length; i++) {
                     L.marker([
-                      latlngs.begin.lat[i],
-                      latlngs.begin.lng[i]
+                      latlngs[i][1],
+                      latlngs[i][0]
                     ]).addTo(_this.mymap);
                   }
+
                 } else {
                   alert("Route could not be matched!");
                 }
@@ -473,7 +421,8 @@ export default {
         radius: 30
       };
 
-      if (onoff) {
+      // ------ SPATIAL PART ------
+      if (onoff.spatial) {
         if (this.heatData.length == 0) {
           //if no heat map data
           let _this = this;
@@ -500,6 +449,38 @@ export default {
         //if toggled off clear remove heat layer from map
         if (this.heatLayer != null) this.mymap.removeLayer(this.heatLayer);
       }
+
+      // ------ TEMPORAL PART ------
+      if (onoff.temporal) {
+        //if toggled on
+        this.show = true;
+
+        if (this.timeData.length == 0) {
+          //if no heat map data
+          let _this = this;
+          this.$http
+            .get("http://demo5390470.mockable.io/temporal")
+            .then(function(response) {
+              console.log(response);
+              _this.timeData = response.data.timeData; // currently each index represents one hour time interval
+            });
+        } else {
+          //if there is data, generate heatmap
+          //this.heatLayer = L.heatLayer(this.heatData, options).addTo(this.mymap);
+        }
+      } else {
+        this.show = false;
+        //if toggled off clear remove heat layer from map
+        //if (this.heatLayer != null) this.mymap.removeLayer(this.heatLayer);
+      }
+    });
+
+    eventBus.$on("clear-route", e => {
+      this.router.getPlan().setWaypoints([]);
+      this.mymap.removeLayer(this.origin);
+      this.origin = {};
+      this.mymap.removeLayer(this.destination);
+      this.destination = {};
     });
   },
   methods: {
@@ -515,7 +496,7 @@ export default {
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
         {
           attribution:
-            'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, Routes @ <a href="http://project-osrm.org/">OSRM</a>',
+            'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, Routes @ <a href="https://developer.tomtom.com/routing-api/">TomTom</a>',
           maxZoom: 18
         }
       );
@@ -524,13 +505,14 @@ export default {
         "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}",
         {
           attribution:
-            'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>, Routes @ <a href="http://project-osrm.org/">OSRM</a>',
+            'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>, Routes @ <a href="https://developer.tomtom.com/routing-api/">TomTom</a>',
           maxZoom: 18,
           id: "mapbox.satellite",
-          accessToken: "pk.eyJ1IjoiYWEtdmFyaXl1biIsImEiOiJjanZzYmhja2QxM2l5NGFvOHpqdXhiNDJvIn0.ez9bRvvx0eg9RZVmjiTPpQ"
+          accessToken:
+            "pk.eyJ1IjoiYWEtdmFyaXl1biIsImEiOiJjanZzYmhja2QxM2l5NGFvOHpqdXhiNDJvIn0.ez9bRvvx0eg9RZVmjiTPpQ"
         }
       );
-        
+
       //this.mymap = L.map("map-container").setView([51.0839, -114.1439], 13);
       this.mymap = L.map("map-container", {
         center: [51.0839, -114.1439],
@@ -540,7 +522,7 @@ export default {
       //adds scale bar
       L.control.scale().addTo(this.mymap);
       //adds layer control to the map
-      var defaultTile = { "OpenStreetMap": OSMtile, "Satellite": satellite };
+      var defaultTile = { OpenStreetMap: OSMtile, Satellite: satellite };
       L.control.layers(defaultTile).addTo(this.mymap);
       //adds measuring tool
       this.measureTool = L.control
@@ -552,8 +534,18 @@ export default {
       this.router = new L.Routing.control({
         waypoints: [null],
         addWaypoints: false,
-        draggableWaypoints: false
+        draggableWaypoints: false,
+
+        router: new L.Routing.TomTom("1BbAHYBSL2gLaGw2oaLNsvXzqpRxzdbN", {
+          routeType: "fastest",
+          language: "en-us",
+          instructionsType: "text"
+        })
+
+        //router: new L.Routing.graphHopper('c356ba44-cb48-4e6c-9966-21eeeb72a36b')
       });
+
+      //console.log(this.router.router.options);
 
       //adds control to handle errors when finding routes
       //L.Routing.errorControl(control).addTo(this.mymap);
@@ -583,7 +575,7 @@ export default {
 
         L.DomEvent.on(destBtn, "click", function() {
           _this.mymap.closePopup();
-          _this.setField(e.latlng, 1); //addoption
+          _this.setField(e.latlng, 1); //add option
           //when clicked add marker to map
           if (_this.destination != undefined) {
             _this.mymap.removeLayer(_this.destination);
@@ -594,8 +586,8 @@ export default {
             .openPopup();
         });
 
-        //disables if measuring tool is active
-        if (!_this.measureTool.isMeasure) {
+        //disable if measuring tool is active
+        if (!_this.measureTool.isMeasure & !_this.hover) {
           L.popup()
             .setContent(container)
             .setLatLng(e.latlng)
@@ -608,7 +600,7 @@ export default {
         _this.mymap.setView(_this.user._latlng, 15);
         _this.user.openPopup();
       }).addTo(this.mymap);
-    },
+    }, //---- end of map initialization ----
 
     onLocationError(e) {
       alert(e.message);
@@ -647,7 +639,7 @@ export default {
         });
     },
 
-    // Calculates angles between two vertices
+    // Calculates angles between two vertices -- dont need 
     angle(lat, lng, lat2, lng2) {
       var t = (lat * Math.PI) / 180;
       var t2 = (lat2 * Math.PI) / 180;
@@ -675,7 +667,7 @@ export default {
       return orientation;
     },
 
-    //joins road segments - Not working super good -- might need to scrap
+    //joins road segments - Not working super good -- might need to scrap 
     consec(ID, begin, end) {
       var brngF = 0.0;
       var brngB = 0.0;
@@ -723,6 +715,21 @@ export default {
 <style scoped>
 #map-container {
   z-index: 1;
+}
+
+#timeslider {
+  top: 75%;
+  left: 15%;
+  pointer-events: auto;
+  opacity: 0.5;
+}
+
+#timeslider:hover {
+  opacity: 1;
+}
+
+.rounded-card {
+  border-radius: 50px;
 }
 </style> 
     
