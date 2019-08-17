@@ -1,20 +1,13 @@
 var Router = require('koa-router');
 var router = new Router();
 
-// var UserInfo = require('../controllers/get-user-info.js')
-// var TrajectoryRec = require('../controllers/get-trajectory.js')
-// var MongoDB = require('../controllers/test-mongo.js')
-// var test = require('../controllers/test.js')
-var Trajectory = require('../controllers/trajectory.js')
+var Heat = require('../controllers/heat.js')
+var Temporal = require('../controllers/temporal.js')
+var Route = require('../controllers/route.js')
 
-
-// router.get('/getUserInfo', UserInfo.getUserInfo);
-// router.get('/getTrajectoryRec', TrajectoryRec.getTrajectoryRec);
-// router.get('/mongoTest',MongoDB.readData);
-// router.get('/test',test.test);
-router.get('/trajectory',Trajectory.getTrajectory);
-
-
-
+router.get('/heat',Heat.getHeat);
+router.get('/temporal',Temporal.getTemporal);
+router.get('/personalized',Route.getPersonalizedRoute);
+router.get('/popular',Route.getPopularRoute);
 
 module.exports = router

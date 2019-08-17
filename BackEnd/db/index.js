@@ -9,7 +9,16 @@ var db = new Sequelize(config.database,config.username,config.password,{
     }
 });
 
-// db.Trajectory = db.import('./models/trajectory.js')
+db.Behavior = db.import('./models/behavior.js')
+db.Edge = db.import('./models/edge.js')
+db.Frequency = db.import('./models/frequency.js')
+db.Segment = db.import('./models/segment.js')
+db.UserBehavior = db.import('./models/userbehavior.js')
+db.User = db.import('./models/user.js')
 db.Vertex = db.import('./models/vertex.js')
-// db.User = db.import('./models/user.js')
+
+
+// User_Behavior -> Segment -> Vertex
+db.UserBehavior.belongsTo(db.Segment, {foreignKey: 's_id', targetKey: 's_id'})
+
 module.exports = db;

@@ -1,9 +1,6 @@
 
 module.exports = function (sequelize, DataTypes) {
     const Vertex = sequelize.define('vertex', {
-        r_id: {
-            type: DataTypes.INTEGER
-        },
         v_id: {
             type: DataTypes.INTEGER
         },
