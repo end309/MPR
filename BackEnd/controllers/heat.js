@@ -1,13 +1,12 @@
 var db = require('../db')
 var _ = require('lodash');
-const Sequelize = require('sequelize');
 
 module.exports = {
     async getHeat(ctx) {
-        const s_id = ctx.query.s_id
+        const u_id = ctx.query.user_id
         await db.UserBehavior.findAll({
             where: {
-                u_id: 1
+                u_id: u_id
             },
             include: [{
                 model: db.Segment, 

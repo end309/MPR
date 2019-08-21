@@ -5,17 +5,29 @@ const Op = Sequelize.Op;
 
 module.exports = {
     async getTemporal(ctx) {
-        const userId = ctx.query.userId
-        const timeID = ctx.query.timeID
-        await db.User_Behavior.findAll({
+        const u_id = ctx.query.user_id
+        const time_id = ctx.query.time_id
+        await db.UserBehavior.findAll({
             where: {
-                u_id: userId,
-                time_id: timeID
+                u_id: u_id,
+                time_id: time_id
             },
-            attributes: ['segment_id','time_id', 'frequency']
-          }).then(temporalData => {
-            data = JSON.stringify(temporalData)
-            data = JSON.parse(data)
+            include: [{
+                model: db.Segment, 
+                required: true,
+                attributes: [['s_lng','lng'],['e_lng','lat']]
+            }],
+            attributes: ['frequency']
+          }).then(heatData => {
+            data = JSON.stringify(heatData);
+            data = JSON.parse(data);
+            data = _.map(data, point => {
+                temp = []
+                temp[0] = point.segment.lng
+                temp[1] = point.segment.lat
+                temp[2] = point.frequency
+                return temp
+            });
             ctx.response.body = data
         }) 
     }
