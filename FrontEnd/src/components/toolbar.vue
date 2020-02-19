@@ -18,14 +18,16 @@
             </v-tooltip>
           </template>
           <v-card>
-            <v-card-title class="headline grey lighten-2" primary-title >About Us</v-card-title>
+            <v-card-title class="headline grey lighten-2" primary-title>About Us</v-card-title>
 
             <v-card-text>
-              <h3>Do you like cruising through highways? Or are residential streets more your speed?</h3> <br/> 
+              <h3>Do you like cruising through highways? Or are residential streets more your speed?</h3>
+              <br />
               <p style="font-size:110%;">
-              Worry not because with MyPersonalizedRoute, we always take your preferences into account! MPR is a personalized route recommendation application being developed at the University of Calgary. 
-              Popular apps such as Google Maps don’t consider your travelling preferences which is what sets this apart from other navigation apps. In short, MPR gets you where you want, how you want.  
-              </p> <br/>
+                Worry not because with MyPersonalizedRoute, we always take your preferences into account! MPR is a personalized route recommendation application being developed at the University of Calgary.
+                Popular apps such as Google Maps don’t consider your travelling preferences which is what sets this apart from other navigation apps. In short, MPR gets you where you want, how you want.
+              </p>
+              <br />
               <h3 style="text-align:center;">Thank You for Using MyPersonalizedRoute!</h3>
             </v-card-text>
 
@@ -182,36 +184,36 @@
               <template v-slot:header>
                 <h1>Data Visualization</h1>
               </template>
-              <v-card class="grey lighten-3 pa-2" >
-                <v-tooltip bottom nudge-top="15" open-delay=1000>
-                <v-switch
-                  v-model="spatial"
-                  slot = "activator"
-                  :label="'Spatial Coverage'"
-                  class="px-4"
-                  @change="
+              <v-card class="grey lighten-3 pa-2">
+                <v-tooltip bottom nudge-top="15" open-delay="1000">
+                  <v-switch
+                    v-model="spatial"
+                    slot="activator"
+                    :label="'Spatial Coverage'"
+                    class="px-4"
+                    @change="
                     if(spatial) {
                       temporal = false;
                       }
                     showSpatial();
                   "
-                ></v-switch>
-                <span>Toggle this to show the spatial coverage from all users</span> 
+                  ></v-switch>
+                  <span>Toggle this to show the spatial coverage from all users</span>
                 </v-tooltip>
-                <v-tooltip bottom nudge-top="15" open-delay=1000>
-                <v-switch
-                  v-model="temporal"
-                  slot="activator"
-                  :label="'Temporal Coverage'"
-                  class="px-4"
-                  @change="
+                <v-tooltip bottom nudge-top="15" open-delay="1000">
+                  <v-switch
+                    v-model="temporal"
+                    slot="activator"
+                    :label="'Temporal Coverage'"
+                    class="px-4"
+                    @change="
                     if(temporal)
                       spatial = false;
 
                       showSpatial();
                   "
-                ></v-switch> 
-                <span>Toggle this to show your temporal coverage</span> 
+                  ></v-switch>
+                  <span>Toggle this to show your temporal coverage</span>
                 </v-tooltip>
               </v-card>
             </v-expansion-panel-content>
@@ -381,8 +383,8 @@ export default {
     },
     //when click GO! button to find route
     findRoute() {
-     
-      if (this.origin == null || this.dest == null || this.time == null) { //if a field is missing 
+      if (this.origin == null || this.dest == null || this.time == null) {
+        //if a field is missing
         alert("Cannot find route! One or more fields are missing");
       } else {
         //validates the coordinates of the origin and destination before routing
@@ -402,7 +404,10 @@ export default {
     },
     //Function to display the spatial coverage from all users
     showSpatial() {
-      eventBus.$emit("show-spatial", {spatial: this.spatial, temporal: this.temporal});
+      eventBus.$emit("show-spatial", {
+        spatial: this.spatial,
+        temporal: this.temporal
+      });
     },
     //Clear route
     clearRoute() {
@@ -415,7 +420,6 @@ export default {
 </script>
 
 <style>
-
 .heat-select {
   float: bottom;
   bottom: 0;
