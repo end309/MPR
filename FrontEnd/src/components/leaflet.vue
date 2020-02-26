@@ -21,7 +21,8 @@
           v-model="slider"
           :max="23"
           @change="onSliderChange($event);"
-        ></v-slider>
+        >
+        </v-slider>
       </v-card-actions>
     </v-card>
   </div>
@@ -83,7 +84,7 @@ export default {
       timeData: [], //temporal data - not finalized
       timeLayer: null, //series of heatmaps seperated for a time range
       slider: 0, // value of the slider for temporal coverage
-      //time: "00:00",
+      bbox: [],
       show: false, //display or hide time slider
       hover: false //check if hovering on time slider
     };
@@ -427,32 +428,57 @@ export default {
 
     //event handler to get trajectory data from all users and generate heatmap to show spatial coverage
     eventBus.$on("show-spatial", onoff => {
-      //default options, can change
-      var options = {
-        maxZoom: 10,
-        max: 10.0,
-        radius: 30
-      };
 
       // ------ SPATIAL PART ------
       if (onoff.spatial) {
-        if (this.heatData.length == 0) {
-          //if no heat map data
-          let _this = this;
-          this.$http
-            //.get("http://demo5390470.mockable.io/heat")
-            .get("http://localhost:9010/heat?user_id=1")
-            .then(function(response) {
-              var tmp = response.data;
-              for (var i = 0; i < tmp.length; i++) {
-                var test = [tmp[i][1], tmp[i][0], tmp[i][2]]; //lat long
-                _this.heatData.push(test);
-              }
-            });
-        }
+        //if no heat map data
+        let _this = this;
+        this.$http
+          //.get("http://demo5390470.mockable.io/heat")
+          .get("http://localhost:9010/heat?user_id=1")
+          .then(function(response) {
+            _this.heatData = [];
+            var tmp = response.data;
 
-        //if there is data, generate heatmap
-        this.heatLayer = L.heatLayer(this.heatData, options).addTo(this.mymap);
+            var bbox = []; // in long lat
+            var maxFreq = -1;
+            for (var i = 0; i < tmp.length; i++) {
+              var test = [
+                tmp[i][1],
+                tmp[i][0],
+                tmp[i][2]
+              ]; //lat long
+              _this.heatData.push(test);
+
+              maxFreq = tmp[i][2] > maxFreq ? tmp[i][2] : maxFreq;
+
+              if(bbox.length == 0)
+                bbox = [tmp[i][0], tmp[i][1], tmp[i][0], tmp[i][1]];
+
+              bbox[0] = tmp[i][0] < bbox[0] ? tmp[i][0] : bbox[0];
+              bbox[1] = tmp[i][1] < bbox[1] ? tmp[i][1] : bbox[1];
+              bbox[2] = tmp[i][0] > bbox[2] ? tmp[i][0] : bbox[2];
+              bbox[3] = tmp[i][1] > bbox[3] ? tmp[i][1] : bbox[3];
+            }
+
+            var options = {
+              max: maxFreq
+            };
+
+            //if there is data, generate heatmap
+            if (_this.heatLayer != null) {
+              _this.mymap.removeLayer(_this.heatLayer);
+            }
+
+            // Making sure there is data to generate heatmap
+            if(_this.heatData.length > 0) {
+              _this.heatLayer = L.heatLayer(_this.heatData, options).addTo(
+                _this.mymap
+              );
+
+              _this.mymap.fitBounds(L.latLngBounds(L.latLng(bbox[1], bbox[0]), L.latLng(bbox[3], bbox[2])));
+            }
+          });
       } else {
         //if toggled off clear remove heat layer from map
         if (this.heatLayer != null) this.mymap.removeLayer(this.heatLayer);
@@ -474,15 +500,42 @@ export default {
           .then(function(response) {
             _this.timeData = [];
             var tmp = response.data;
+
+            // var bbox = []; // in long lat
+            var maxFreq = -1;
             for (var i = 0; i < tmp.length; i++) {
               var test = [tmp[i][1], tmp[i][0], tmp[i][2]]; //lat long
               _this.timeData.push(test);
+
+              maxFreq = tmp[i][2] > maxFreq ? tmp[i][2] : maxFreq;
+              
+              // if(bbox.length == 0)
+              //   bbox = [tmp[i][0], tmp[i][1], tmp[i][0], tmp[i][1]];
+
+              // bbox[0] = tmp[i][0] < bbox[0] ? tmp[i][0] : bbox[0];
+              // bbox[1] = tmp[i][1] < bbox[1] ? tmp[i][1] : bbox[1];
+              // bbox[2] = tmp[i][0] > bbox[2] ? tmp[i][0] : bbox[2];
+              // bbox[3] = tmp[i][1] > bbox[3] ? tmp[i][1] : bbox[3];
+            }
+
+            var options = {
+              max: maxFreq
+            };
+
+            //if there is data, generate heatmap
+            if (_this.heatLayer != null) {
+              _this.mymap.removeLayer(_this.heatLayer);
+            }
+
+            // Making sure there is data to generate heat map
+            if(_this.timeData.length > 0) {
+              _this.heatLayer = L.heatLayer(_this.timeData, options).addTo(
+                _this.mymap
+              );
+
+              // _this.mymap.fitBounds(L.latLngBounds(L.latLng(bbox[1], bbox[0]), L.latLng(bbox[3], bbox[2])));
             }
           });
-
-        //if there is data, generate heatmap
-        if (this.heatLayer != null) this.mymap.removeLayer(this.heatLayer);
-        this.heatLayer = L.heatLayer(this.timeData, options).addTo(this.mymap);
       } else {
         this.show = false;
         //if toggled off clear remove heat layer from map
@@ -640,7 +693,7 @@ export default {
       this.$http
         .get("https://easy-mock.com/mock/5d114866b674851c27217f08/example/traj")
         .then(function(response) {
-          console.log(response);
+          // console.log(response);
           for (var i = 0; i < response.data.trajectories.lat.length; i++) {
             //console.log("check coords: " + response.data.routes[0].geometry.coordinates[i])
             L.marker([

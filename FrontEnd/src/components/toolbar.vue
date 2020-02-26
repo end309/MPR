@@ -198,7 +198,7 @@
                     showSpatial();
                   "
                   ></v-switch>
-                  <span>Toggle this to show the spatial coverage from all users</span>
+                  <span>Toggle this to show your spatial coverage</span>
                 </v-tooltip>
                 <v-tooltip bottom nudge-top="15" open-delay="1000">
                   <v-switch
