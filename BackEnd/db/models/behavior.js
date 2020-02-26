@@ -4,7 +4,7 @@ module.exports = function (sequelize, DataTypes) {
             type: DataTypes.INTEGER,
             primaryKey: true
         },
-        segement_id: {
+        segment_id: {
             type: DataTypes.INTEGER
         },
         time_id: {

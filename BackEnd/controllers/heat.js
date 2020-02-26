@@ -11,9 +11,9 @@ module.exports = {
             include: [{
                 model: db.Segment, 
                 required: true,
-                attributes: [['s_lng','lng'],['e_lng','lat']]
+                attributes: [['s_lng','lng'],['s_lat','lat']]
             }],
-            attributes: ['frequency']
+            attributes: ['freq']
           }).then(heatData => {
             data = JSON.stringify(heatData);
             data = JSON.parse(data);
@@ -21,7 +21,7 @@ module.exports = {
                 temp = []
                 temp[0] = point.segment.lng
                 temp[1] = point.segment.lat
-                temp[2] = point.frequency
+                temp[2] = point.freq
                 return temp
             });
             ctx.response.body = data

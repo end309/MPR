@@ -9,10 +9,19 @@
       @mouseleave="hover = false; mymap.dragging.enable(); mymap.doubleClickZoom.enable(); "
     >
       <v-card-actions class="justify-center">
-        <div style="width:150px;" class="mr-5">
-          <v-text-field  label="Time" readonly outline v-model="time"></v-text-field>
+        <div style="width:85px;text-align: right;" class="mr-4">
+          <span class="display-1 font-weight-light" v-text="slider"></span>
+          <span class="display-1 font-weight-light">:00</span>
+          <!--<v-text-field  label="Time" readonly outline v-model="time"></v-text-field>-->
         </div>
-        <v-slider class = "mt-0" step="5" tick-size="4" v-model="slider"></v-slider>
+        <v-slider
+          class="mx-3"
+          step="1"
+          tick-size="4"
+          v-model="slider"
+          :max="23"
+          @change="onSliderChange($event);"
+        ></v-slider>
       </v-card-actions>
     </v-card>
   </div>
@@ -34,7 +43,7 @@ import geocoders from "leaflet-control-geocoder";
 import lrm from "../leaflet/leaflet-routing-machine.js";
 //graphhopper api key is: c356ba44-cb48-4e6c-9966-21eeeb72a36b
 //keep an eye on credit usage
-import graphhopper from "lrm-graphhopper"; //not currently being used but I kept it just in case 
+import graphhopper from "lrm-graphhopper"; //not currently being used but I kept it just in case
 import measure from "../leaflet/leaflet.measure.js";
 import { eventBus } from "../main.js";
 import easyButton from "leaflet-easybutton";
@@ -46,7 +55,7 @@ var tom = require("../leaflet/L.Routing.TomTom.js");
 //custom leaflet popups test
 // create popup contents
 var customPopup =
-  "<button> Start from this location </button> <br/><v-btn>Go to this location</v-btn>";
+  "<button>Start from this location</button><br/><v-btn>Go to this location</v-btn>";
 
 // specify popup options
 var customOptions = {
@@ -74,7 +83,7 @@ export default {
       timeData: [], //temporal data - not finalized
       timeLayer: null, //series of heatmaps seperated for a time range
       slider: 0, // value of the slider for temporal coverage
-      time: "00:00",
+      //time: "00:00",
       show: false, //display or hide time slider
       hover: false //check if hovering on time slider
     };
@@ -83,7 +92,7 @@ export default {
     //initialize map
     this.initMap();
     this.locateUser();
-    //this.trajectories(); 
+    //this.trajectories();
     //this.rtest();
 
     //event handler to geocode an address to return lat and long for map
@@ -99,14 +108,16 @@ export default {
 
         if (search.choice == 0) {
           //from search
-          this.searchMark = L.marker(
-            [result[0].center.lat, result[0].center.lng],
-            { icon: greenIcon }
-          )
-            .addTo(this.mymap)
-            //hihi
-            .bindPopup(customPopup, customOptions)
-            .openPopup();
+
+          // this.searchMark = L.marker(
+          //   [result[0].center.lat, result[0].center.lng],
+          //   { icon: greenIcon }
+          // )
+          //   .addTo(this.mymap)
+          //   //hihi
+          //   .bindPopup(customPopup, customOptions)
+          //   .openPopup();
+
           eventBus.$emit("fill-fields", {
             name: result[0].name,
             choice: search.choice
@@ -232,7 +243,7 @@ export default {
           .then(function(response) {
             var latlngs = response.data.data;
             //console.log("SKRRT___: ", latlngs)
-  
+
             // var polyline = L.polyline(latlngs, {color: 'red'}).addTo(_this.mymap);
             // _this.mymap.fitBounds(polyline.getBounds());
 
@@ -247,7 +258,7 @@ export default {
             //OSRM map matching, coordinates must be in long-lat, but visualization on map needs lat-long
 
             var url = "http://router.project-osrm.org/match/v1/driving/";
-            var tmp =""; //radius
+            var tmp = ""; //radius
             var tmp2 = ""; // url
             for (var i = 0; i < latlngs.length; i++) {
               if (i == latlngs.length - 1) {
@@ -256,7 +267,7 @@ export default {
                   ",",
                   latlngs[i][1].toString()
                 );
-                tmp = tmp.concat("50"); //search radius of 50m 
+                tmp = tmp.concat("50"); //search radius of 50m
               } else {
                 tmp2 = tmp2.concat(
                   // latlngs.begin.lng[i].toString(),
@@ -282,25 +293,27 @@ export default {
               .then(function(route) {
                 //console.log("Lat and Long: ", latlngs);
                 console.log("MAP MATCHING ---: ", route);
-                
+
                 if (route.data.matchings.length != 0) {
                   var matched = [];
-                  for(var i = 0; i < route.data.matchings[0].geometry.coordinates.length; i++) {
-                    matched.push([route.data.matchings[0].geometry.coordinates[i][1], route.data.matchings[0].geometry.coordinates[i][0] ])
+                  for (
+                    var i = 0;
+                    i < route.data.matchings[0].geometry.coordinates.length;
+                    i++
+                  ) {
+                    matched.push([
+                      route.data.matchings[0].geometry.coordinates[i][1],
+                      route.data.matchings[0].geometry.coordinates[i][0]
+                    ]);
                   }
-                    var polyline = L.polyline(matched, { color: "red" }).addTo(
-                      _this.mymap
-                    );
-                    _this.mymap.fitBounds(polyline.getBounds());
-                  
+                  var polyline = L.polyline(matched, { color: "red" }).addTo(
+                    _this.mymap
+                  );
+                  _this.mymap.fitBounds(polyline.getBounds());
 
                   for (var i = 0; i < latlngs.length; i++) {
-                    L.marker([
-                      latlngs[i][1],
-                      latlngs[i][0]
-                    ]).addTo(_this.mymap);
+                    L.marker([latlngs[i][1], latlngs[i][0]]).addTo(_this.mymap);
                   }
-
                 } else {
                   alert("Route could not be matched!");
                 }
@@ -427,24 +440,19 @@ export default {
           //if no heat map data
           let _this = this;
           this.$http
-            .get("http://demo5390470.mockable.io/heat")
+            //.get("http://demo5390470.mockable.io/heat")
+            .get("http://localhost:9010/heat?user_id=1")
             .then(function(response) {
-              console.log(response);
-              var tmp = response.data.data;
+              var tmp = response.data;
               for (var i = 0; i < tmp.length; i++) {
                 var test = [tmp[i][1], tmp[i][0], tmp[i][2]]; //lat long
                 _this.heatData.push(test);
               }
-              _this.heatLayer = L.heatLayer(_this.heatData, options).addTo(
-                _this.mymap
-              );
             });
-        } else {
-          //if there is data, generate heatmap
-          this.heatLayer = L.heatLayer(this.heatData, options).addTo(
-            this.mymap
-          );
         }
+
+        //if there is data, generate heatmap
+        this.heatLayer = L.heatLayer(this.heatData, options).addTo(this.mymap);
       } else {
         //if toggled off clear remove heat layer from map
         if (this.heatLayer != null) this.mymap.removeLayer(this.heatLayer);
@@ -455,23 +463,30 @@ export default {
         //if toggled on
         this.show = true;
 
-        if (this.timeData.length == 0) {
-          //if no heat map data
-          let _this = this;
-          this.$http
-            .get("http://demo5390470.mockable.io/temporal")
-            .then(function(response) {
-              console.log(response);
-              _this.timeData = response.data.timeData; // currently each index represents one hour time interval
-            });
-        } else {
-          //if there is data, generate heatmap
-          //this.heatLayer = L.heatLayer(this.heatData, options).addTo(this.mymap);
-        }
+        //if no heat map data
+        let _this = this;
+        this.$http
+          //.get("http://demo5390470.mockable.io/temporal")
+          .get(
+            "http://localhost:9010/temporal?user_id=1&time_id=" +
+              this.slider.toString()
+          )
+          .then(function(response) {
+            _this.timeData = [];
+            var tmp = response.data;
+            for (var i = 0; i < tmp.length; i++) {
+              var test = [tmp[i][1], tmp[i][0], tmp[i][2]]; //lat long
+              _this.timeData.push(test);
+            }
+          });
+
+        //if there is data, generate heatmap
+        if (this.heatLayer != null) this.mymap.removeLayer(this.heatLayer);
+        this.heatLayer = L.heatLayer(this.timeData, options).addTo(this.mymap);
       } else {
         this.show = false;
         //if toggled off clear remove heat layer from map
-        //if (this.heatLayer != null) this.mymap.removeLayer(this.heatLayer);
+        if (this.heatLayer != null) this.mymap.removeLayer(this.heatLayer);
       }
     });
 
@@ -569,7 +584,7 @@ export default {
           }
           _this.origin = L.marker(e.latlng, { icon: violetIcon })
             .addTo(_this.mymap)
-            .bindPopup("Point of Origin")
+            .bindPopup("Origin")
             .openPopup();
         });
 
@@ -606,10 +621,10 @@ export default {
       alert(e.message);
     },
     onLocationFound(e) {
-      this.user = L.marker(e.latlng, { icon: redIcon })
+      this.user = L.marker(e.latlng, { icon: greyIcon })
         .addTo(this.mymap)
-        .bindPopup("You are here")
-        .openPopup();
+        .bindPopup("Current location");
+      //.openPopup();
       eventBus.$emit("fill-fields", { location: e.latlng, choice: 3 });
     },
     locateUser() {
@@ -639,7 +654,7 @@ export default {
         });
     },
 
-    // Calculates angles between two vertices -- dont need 
+    // Calculates angles between two vertices -- dont need
     angle(lat, lng, lat2, lng2) {
       var t = (lat * Math.PI) / 180;
       var t2 = (lat2 * Math.PI) / 180;
@@ -667,7 +682,7 @@ export default {
       return orientation;
     },
 
-    //joins road segments - Not working super good -- might need to scrap 
+    //joins road segments - Not working super good -- might need to scrap
     consec(ID, begin, end) {
       var brngF = 0.0;
       var brngB = 0.0;
@@ -687,7 +702,7 @@ export default {
         diff = brngF - brngB;
 
         //Keep segments seperate if the orientation changes drastically
-        if (ID[i + 1] == ID[i] + 1 || (diff > -10 || diff > 10)) {
+        if (ID[i + 1] == ID[i] + 1 || diff > -10 || diff > 10) {
           if (ID[i + 1] == ID[i] + 1 && (diff < -10 || diff < 10)) {
             this.pRoute.push({ x: end.lng[i], y: end.lat[i] });
             this.pRoute.push({ x: begin.lng[i + 1], y: begin.lat[i + 1] });
@@ -706,6 +721,13 @@ export default {
       this.pRoute.push({
         x: end.lng[ID.length - 1],
         y: end.lat[ID.length - 1]
+      });
+    },
+
+    onSliderChange(value) {
+      eventBus.$emit("show-spatial", {
+        spatial: false,
+        temporal: true
       });
     }
   }
