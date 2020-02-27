@@ -15,6 +15,10 @@
           <!--<v-text-field  label="Time" readonly outline v-model="time"></v-text-field>-->
         </div>
         <v-slider
+          prepend-icon="fa-minus-circle"
+          append-icon="fa-plus-circle"
+          @click:append="increase"
+          @click:prepend="decrease"
           class="mx-3"
           step="1"
           tick-size="4"
@@ -782,7 +786,21 @@ export default {
         spatial: false,
         temporal: true
       });
-    }
+    },
+    increase() {
+      this.slider = (this.slider + 1) || 23;
+      eventBus.$emit("show-spatial", {
+        spatial: false,
+        temporal: true
+      });
+    },
+    decrease() {
+      this.slider = (this.slider - 1) || 0;
+      eventBus.$emit("show-spatial", {
+        spatial: false,
+        temporal: true
+      });
+    },
   }
 };
 </script>

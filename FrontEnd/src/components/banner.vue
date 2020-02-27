@@ -2,7 +2,7 @@
     <div id="head">
         <span>
             <button class="openbtn" @click="openNav">&#9776;</button> 
-            <p>  MyPersonalizedRoute </p> 
+            <p>MyPersonalizedRoute</p> 
         </span>
         <form id="loginInfo">
             <input type="text" placeholder="Username" name="user" class="username" required>

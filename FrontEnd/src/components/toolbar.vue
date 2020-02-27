@@ -28,7 +28,7 @@
                 Popular apps such as Google Maps don’t consider your travelling preferences which is what sets this apart from other navigation apps. In short, MPR gets you where you want, how you want.
               </p>
               <br />
-              <h3 style="text-align:center;">Thank You for Using MyPersonalizedRoute!</h3>
+              <h3 style="text-align:center;">Thank you for using MyPersonalizedRoute!</h3>
             </v-card-text>
 
             <v-card-actions>
@@ -46,7 +46,7 @@
         <v-menu offset-y :close-on-content-click="false" bottom>
           <template v-slot:activator="{ on }">
             <v-btn fab v-on="on" small>
-              <v-avatar size="36">
+              <v-avatar size="30">
                 <img v-bind:src="user.avatar" alt="default" />
               </v-avatar>
             </v-btn>
@@ -93,7 +93,7 @@
       <!-- dropdown -->
       <div class="text-xs-center">
         <v-text-field
-          placeholder="Find a Location!"
+          placeholder="Find a location"
           prepend-inner-icon="room"
           clearable
           v-model="search"
@@ -107,7 +107,7 @@
           <v-expansion-panel>
             <v-expansion-panel-content>
               <template v-slot:header>
-                <h1>Find My Route!</h1>
+                <h1>Routing</h1>
               </template>
               <v-card class="grey lighten-3 pa-2">
                 <v-text-field
@@ -250,11 +250,11 @@ export default {
       option: "0",
       user: {
         // maybe add avatar
-        ID: 0,
-        avatar: "https://vuetifyjs.com/apple-touch-icon-180x180.png",
-        //"require('../assets/MPRLogo.png')",
-        username: null,
-        password: null
+        ID: 1,
+        //avatar: "https://vuetifyjs.com/apple-touch-icon-180x180.png",
+        avatar: require('../assets/user-light.svg'),
+        username: "",
+        password: ""
       }
     };
   },
