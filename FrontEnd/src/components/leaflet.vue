@@ -42,7 +42,8 @@ import {
   yellowIcon,
   violetIcon,
   greyIcon,
-  blackIcon
+  blackIcon,
+  gpsIcon
 } from "../leaflet/leaflet-color-markers.js";
 import geocoders from "leaflet-control-geocoder";
 import lrm from "../leaflet/leaflet-routing-machine.js";
@@ -203,6 +204,8 @@ export default {
     //Options include shortest distance, shortest duration/ time, personalized, and "popular"
     //NOT COMPLETE
     eventBus.$on("find-route", query => {
+      console.log("Finding route being triggered!");
+      console.log(query);
       let _this = this;
       //Option 0 for Fastest Route
       if (query.option == 0) {
@@ -219,6 +222,7 @@ export default {
           new L.Routing.Waypoint(L.latLng(query.orig[0], query.orig[1]), "A"),
           new L.Routing.Waypoint(L.latLng(query.dest[0], query.dest[1]), "B")
         ];
+
         this.router.setWaypoints(waypoints);
         this.router.route();
         this.router.addTo(this.mymap);
@@ -553,6 +557,13 @@ export default {
       this.origin = {};
       this.mymap.removeLayer(this.destination);
       this.destination = {};
+      
+      // Or remove it with //document.getElementsByClassName("")[0].remove()
+      var directionPanel = this.$el.querySelector('.leaflet-routing-container');
+      if(directionPanel) {
+        directionPanel.remove();
+      }
+            
     });
   },
   methods: {
@@ -627,10 +638,14 @@ export default {
       let _this = this;
 
       this.mymap.on("click", function clickLocal(e) {
-        var container = L.DomUtil.create("div"),
-          //createButton undefined
-          startBtn = _this.createButton("Start from this location", container),
-          destBtn = _this.createButton("Go to this location", container);
+        var container = L.DomUtil.create("div");        
+        var startBtn = _this.createButton("Start from this location", container);
+
+        // Workaround to break line between the creation of buttons
+        var lb = L.DomUtil.create("span", "", container);
+        lb.innerHTML = "<br>";
+
+        var destBtn = _this.createButton("Go to this location", container);
 
         L.DomEvent.on(startBtn, "click", function() {
           _this.mymap.closePopup();
@@ -678,7 +693,7 @@ export default {
       alert(e.message);
     },
     onLocationFound(e) {
-      this.user = L.marker(e.latlng, { icon: greyIcon })
+      this.user = L.marker(e.latlng, { icon: gpsIcon })
         .addTo(this.mymap)
         .bindPopup("Current location");
       //.openPopup();
@@ -824,5 +839,9 @@ export default {
 .rounded-card {
   border-radius: 50px;
 }
+
+.map-popup {
+  display: inline-grid;
+}
+
 </style> 
-    

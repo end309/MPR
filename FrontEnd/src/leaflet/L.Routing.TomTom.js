@@ -72,10 +72,17 @@
                         data = JSON.parse(resp.responseText);
                         this._routeDone(data, wps, callback, context);
                     } else {
-                        alert("Route could not be found");
+                        console.log("Route could not be found.");
+                        var errorDescription = null;
+                        try{
+                            errorDescription = JSON.parse(err.responseText).error.description;
+                        } catch {
+                            errorDescription = err.responseText;
+                        }
+
                         callback.call(context || callback, {
                             status: -1,
-                            message: 'HTTP request failed: ' + JSON.parse(err.responseText).error.description
+                            message: 'HTTP request failed: ' + errorDescription
                         });
                     }
                 }

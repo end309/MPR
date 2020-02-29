@@ -5,7 +5,7 @@ import App from './App.vue'
 import '../node_modules/vuetify/dist/vuetify.min.css'
 
 Vue.config.productionTip = false
-Vue.use(axios)
+//Vue.use(axios)
 Vue.use(Vuetify)
 
 //creates a constant variable eventBus

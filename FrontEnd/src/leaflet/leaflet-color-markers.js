@@ -70,4 +70,14 @@ var blackIcon = new L.Icon({
 	shadowSize: [41, 41]
 });
 
-export {blueIcon, redIcon, greenIcon, orangeIcon, yellowIcon, violetIcon, greyIcon, blackIcon };
+var gpsIcon = new L.Icon({
+	iconUrl: require('../assets/gps.svg'),
+	//shadowUrl: require('../assets/gps-shadow.svg'),
+	iconSize: [25, 25],
+	iconAnchor: [0, 0],
+	popupAnchor: [12.5, 0],
+	//shadowSize: [25, 25],
+	//shadowAnchor: [-5,5]
+});
+
+export {blueIcon, redIcon, greenIcon, orangeIcon, yellowIcon, violetIcon, greyIcon, blackIcon, gpsIcon };

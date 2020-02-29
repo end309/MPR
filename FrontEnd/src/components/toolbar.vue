@@ -1,7 +1,7 @@
 <template>
   <nav>
-    <!--  Main Banner -->
-    <v-toolbar dark flat app fixed color="#1e4158">
+    <!-- Main Banner (original color #1E4158) -->
+    <v-toolbar dark flat app fixed color="#000000">
       <v-toolbar-side-icon @click="drawer=!drawer"></v-toolbar-side-icon>
       <v-toolbar-title>MyPersonalizedRoute</v-toolbar-title>
       <v-spacer></v-spacer>
@@ -85,11 +85,11 @@
     </v-toolbar>
 
     <!--  side menu drawer -->
-    <v-navigation-drawer app flat v-model="drawer" width="400" class="blue-grey lighten-3">
+    <v-navigation-drawer app flat v-model="drawer" width="400" class="blue-grey lighten-4">
       <v-btn fab flat small @click="drawer=false">
         <v-icon small>close</v-icon>
       </v-btn>
-      <v-img :src="require('../assets/MPRLogo.png')" max-height="150"></v-img>
+      <v-img :src="require('../assets/MPRLogo-alt.svg')" contain max-height="150"></v-img>
       <!-- dropdown -->
       <div class="text-xs-center">
         <v-text-field
@@ -252,7 +252,7 @@ export default {
         // maybe add avatar
         ID: 1,
         //avatar: "https://vuetifyjs.com/apple-touch-icon-180x180.png",
-        avatar: require('../assets/user-light.svg'),
+        avatar: require("../assets/user-light.svg"),
         username: "",
         password: ""
       }
